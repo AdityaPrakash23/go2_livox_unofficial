@@ -99,6 +99,30 @@ class ROS2Publisher(IRobotDataPublisher):
         odom_msg.pose.pose.orientation.z = float(orientation['z'])
         odom_msg.pose.pose.orientation.w = float(orientation['w'])
 
+        # Add velocity data from robot state (required for Nav2)
+        if robot_data.robot_state and hasattr(robot_data.robot_state, 'velocity'):
+            velocity = robot_data.robot_state.velocity
+            odom_msg.twist.twist.linear.x = float(velocity.get('x', 0.0))
+            odom_msg.twist.twist.linear.y = float(velocity.get('y', 0.0))
+            odom_msg.twist.twist.linear.z = 0.0
+            odom_msg.twist.twist.angular.x = 0.0
+            odom_msg.twist.twist.angular.y = 0.0
+            odom_msg.twist.twist.angular.z = float(velocity.get('yaw', 0.0))
+
+        # Add covariance (required for AMCL and Nav2)
+        odom_msg.pose.covariance = [0.01, 0, 0, 0, 0, 0,
+        0, 0.01, 0, 0, 0, 0,
+        0, 0, 0.01, 0, 0, 0,
+        0, 0, 0, 0.03, 0, 0,
+        0, 0, 0, 0, 0.03, 0,
+        0, 0, 0, 0, 0, 0.05]
+        odom_msg.twist.covariance = [0.02, 0, 0, 0, 0, 0,
+        0, 0.02, 0, 0, 0, 0,
+        0, 0, 0.02, 0, 0, 0,
+        0, 0, 0, 0.05, 0, 0,
+        0, 0, 0, 0, 0.05, 0,
+        0, 0, 0, 0, 0, 0.1]
+
         self.publishers['odometry'][robot_idx].publish(odom_msg)
 
     def publish_joint_state(self, robot_data: RobotData) -> None:

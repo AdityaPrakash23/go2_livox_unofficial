@@ -166,12 +166,22 @@ class Go2NodeFactory:
                 executable='pointcloud_to_laserscan_node',
                 name='go2_pointcloud_to_laserscan',
                 remappings=[
-                    ('cloud_in', 'point_cloud2'),
+                    ('cloud_in', 'livox/lidar'),
                     ('scan', 'scan'),
                 ],
                 parameters=[{
                     'target_frame': 'base_link',
-                    'max_height': 0.5
+                    'max_height': 0.5,
+                    'min_height': 0.1,
+                    'range_min': 0.5,
+                    'angle_min': -3.14159,
+                    'angle_max': 3.14159,
+                    'angle_increment': 0.0174533,
+                    # 'scan_time': 0.033,
+                    # 'range_max': 20.0,
+                    # 'use_inf': True,
+                    # 'concurrency_level': 1,
+                    
                 }],
                 output='screen',
             )
@@ -209,9 +219,9 @@ class Go2NodeFactory:
                 name='pointcloud_aggregator',
                 parameters=[{
                     'max_range': 20.0,
-                    'min_range': 0.1,
-                    'height_filter_min': -2.0,
-                    'height_filter_max': 3.0,
+                    'min_range': 0.5,
+                    'height_filter_min': 0.1,
+                    'height_filter_max': 0.5,
                     'downsample_rate': 5,
                     'publish_rate': 10.0
                 }],
