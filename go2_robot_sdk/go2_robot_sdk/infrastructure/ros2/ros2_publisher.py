@@ -33,6 +33,7 @@ class ROS2Publisher(IRobotDataPublisher):
         self.broadcaster = broadcaster
         self.bridge = CvBridge()
         self.camera_info = load_camera_info()
+        self.publish_odom_tf = node.get_parameter('publish_odom_tf').get_parameter_value().bool_value
 
     def publish_odometry(self, robot_data: RobotData) -> None:
         """Publish odometry data"""
@@ -42,8 +43,8 @@ class ROS2Publisher(IRobotDataPublisher):
         try:
             robot_idx = int(robot_data.robot_id)
             
-            # Publish transform
-            self._publish_transform(robot_data, robot_idx)
+            if self.publish_odom_tf:
+                self._publish_transform(robot_data, robot_idx)
             
             # Publish odometry topic
             self._publish_odometry_topic(robot_data, robot_idx)
@@ -98,6 +99,14 @@ class ROS2Publisher(IRobotDataPublisher):
         odom_msg.pose.pose.orientation.y = float(orientation['y'])
         odom_msg.pose.pose.orientation.z = float(orientation['z'])
         odom_msg.pose.pose.orientation.w = float(orientation['w'])
+        odom_msg.pose.covariance = [
+            0.05, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.05, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 999.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 999.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 999.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.10,
+        ]
 
         self.publishers['odometry'][robot_idx].publish(odom_msg)
 

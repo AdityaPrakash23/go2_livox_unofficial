@@ -23,6 +23,9 @@ class Go2LaunchConfig:
         self.map_name = os.getenv('MAP_NAME', '3d_map')
         self.save_map = os.getenv('MAP_SAVE', 'true')
         self.conn_type = os.getenv('CONN_TYPE', 'webrtc')
+        self.livox_cloud_topic = os.getenv('LIVOX_CLOUD_TOPIC', '/livox/lidar')
+        self.livox_imu_topic = os.getenv('LIVOX_IMU_TOPIC', '/livox/imu')
+        self.livox_frame = os.getenv('LIVOX_FRAME', 'livox_frame')
         
         # Derived configurations
         self.conn_mode = self._determine_connection_mode()
@@ -65,6 +68,7 @@ class Go2LaunchConfig:
             'joystick': os.path.join(self.package_dir, 'config', 'joystick.yaml'),
             'twist_mux': os.path.join(self.package_dir, 'config', 'twist_mux.yaml'),
             'slam': os.path.join(self.package_dir, 'config', 'mapper_params_online_async.yaml'),
+            'livox_ekf': os.path.join(self.package_dir, 'config', 'livox_ekf.yaml'),
             'nav2': os.path.join(self.package_dir, 'config', 'nav2_params.yaml'),
             'rviz': os.path.join(self.package_dir, 'config', self.rviz_config),
             'urdf': os.path.join(self.package_dir, 'urdf', self.urdf_file),
@@ -83,6 +87,18 @@ class Go2NodeFactory:
             DeclareLaunchArgument('rviz2', default_value='true', description='Launch RViz2'),
             DeclareLaunchArgument('nav2', default_value='true', description='Launch Nav2'),
             DeclareLaunchArgument('slam', default_value='true', description='Launch SLAM'),
+            DeclareLaunchArgument('use_ekf', default_value='true', description='Fuse Go2 odometry and Livox IMU with robot_localization'),
+            DeclareLaunchArgument('driver_odom_tf', default_value='false', description='Let the Go2 driver publish odom -> base_link TF'),
+            DeclareLaunchArgument('go2_lidar', default_value='false', description='Run the built-in Go2 lidar processing pipeline'),
+            DeclareLaunchArgument('mapping_cloud_topic', default_value=self.config.livox_cloud_topic, description='PointCloud2 topic used for mapping'),
+            DeclareLaunchArgument('livox_imu_topic', default_value=self.config.livox_imu_topic, description='sensor_msgs/Imu topic used by the EKF'),
+            DeclareLaunchArgument('livox_frame', default_value=self.config.livox_frame, description='Livox lidar frame id'),
+            DeclareLaunchArgument('livox_x', default_value='0.25', description='Livox x offset from base_link in meters'),
+            DeclareLaunchArgument('livox_y', default_value='0.0', description='Livox y offset from base_link in meters'),
+            DeclareLaunchArgument('livox_z', default_value='0.16', description='Livox z offset from base_link in meters'),
+            DeclareLaunchArgument('livox_roll', default_value='0.0', description='Livox roll offset from base_link in radians'),
+            DeclareLaunchArgument('livox_pitch', default_value='0.0', description='Livox pitch offset from base_link in radians'),
+            DeclareLaunchArgument('livox_yaw', default_value='0.0', description='Livox yaw offset from base_link in radians'),
             DeclareLaunchArgument('foxglove', default_value='true', description='Launch Foxglove Bridge'),
             DeclareLaunchArgument('joystick', default_value='true', description='Launch joystick'),
             DeclareLaunchArgument('teleop', default_value='true', description='Launch teleoperation'),
@@ -150,12 +166,20 @@ class Go2NodeFactory:
                 executable='pointcloud_to_laserscan_node',
                 name=f'{namespace}_pointcloud_to_laserscan',
                 remappings=[
-                    ('cloud_in', f'{namespace}/point_cloud2'),
+                    ('cloud_in', LaunchConfiguration('mapping_cloud_topic')),
                     ('scan', f'{namespace}/scan'),
                 ],
                 parameters=[{
                     'target_frame': f'{namespace}/base_link',
-                    'max_height': 0.1
+                    'max_height': 2.0,
+                    'min_height': -0.2,
+                    'angle_min': -3.14159,
+                    'angle_max': 3.14159,
+                    'angle_increment': 0.00872665,
+                    'scan_time': 0.1,
+                    'range_min': 0.1,
+                    'range_max': 20.0,
+                    'use_inf': True,
                 }],
                 output='screen',
             )
@@ -166,12 +190,20 @@ class Go2NodeFactory:
                 executable='pointcloud_to_laserscan_node',
                 name='go2_pointcloud_to_laserscan',
                 remappings=[
-                    ('cloud_in', 'point_cloud2'),
+                    ('cloud_in', LaunchConfiguration('mapping_cloud_topic')),
                     ('scan', 'scan'),
                 ],
                 parameters=[{
                     'target_frame': 'base_link',
-                    'max_height': 0.5
+                    'max_height': 2.0,
+                    'min_height': -0.2,
+                    'angle_min': -3.14159,
+                    'angle_max': 3.14159,
+                    'angle_increment': 0.00872665,
+                    'scan_time': 0.1,
+                    'range_min': 0.1,
+                    'range_max': 20.0,
+                    'use_inf': True,
                 }],
                 output='screen',
             )
@@ -188,14 +220,44 @@ class Go2NodeFactory:
                 parameters=[{
                     'robot_ip': self.config.robot_ip,
                     'token': self.config.robot_token,
-                    'conn_type': self.config.conn_type
+                    'conn_type': self.config.conn_type,
+                    'publish_odom_tf': LaunchConfiguration('driver_odom_tf'),
                 }],
+            ),
+            Node(
+                package='tf2_ros',
+                executable='static_transform_publisher',
+                name='base_link_to_livox',
+                arguments=[
+                    '--x', LaunchConfiguration('livox_x'),
+                    '--y', LaunchConfiguration('livox_y'),
+                    '--z', LaunchConfiguration('livox_z'),
+                    '--roll', LaunchConfiguration('livox_roll'),
+                    '--pitch', LaunchConfiguration('livox_pitch'),
+                    '--yaw', LaunchConfiguration('livox_yaw'),
+                    '--frame-id', 'base_link',
+                    '--child-frame-id', LaunchConfiguration('livox_frame'),
+                ],
+                output='screen',
+            ),
+            Node(
+                package='robot_localization',
+                executable='ekf_node',
+                name='ekf_filter_node',
+                condition=IfCondition(LaunchConfiguration('use_ekf')),
+                output='screen',
+                parameters=[
+                    self.config.config_paths['livox_ekf'],
+                    {'imu0': LaunchConfiguration('livox_imu_topic')},
+                    {'use_sim_time': LaunchConfiguration('use_sim_time', default='false')},
+                ],
             ),
             # LiDAR processing node (new separate package)
             Node(
                 package='lidar_processor',
                 executable='lidar_to_pointcloud',
                 name='lidar_to_pointcloud',
+                condition=IfCondition(LaunchConfiguration('go2_lidar')),
                 parameters=[{
                     'robot_ip_lst': self.config.robot_ip_list,
                     'map_name': self.config.map_name,
@@ -207,6 +269,7 @@ class Go2NodeFactory:
                 package='lidar_processor',
                 executable='pointcloud_aggregator',
                 name='pointcloud_aggregator',
+                condition=IfCondition(LaunchConfiguration('go2_lidar')),
                 parameters=[{
                     'max_range': 20.0,
                     'min_range': 0.1,
