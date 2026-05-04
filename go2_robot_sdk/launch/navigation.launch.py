@@ -21,6 +21,9 @@ def generate_launch_description():
     robot_ip_list = robot_ip.replace(" ", "").split(",") if robot_ip else []
     map_file = os.getenv('MAP_FILE', '')
     conn_type = os.getenv('CONN_TYPE', 'webrtc')
+    livox_cloud_topic = os.getenv('LIVOX_CLOUD_TOPIC', '/livox/lidar')
+    livox_imu_topic = os.getenv('LIVOX_IMU_TOPIC', '/livox/imu')
+    livox_frame = os.getenv('LIVOX_FRAME', 'livox_frame')
     
     # Determine connection mode
     conn_mode = "single" if len(robot_ip_list) == 1 and conn_type != "cyclonedds" else "multi"
@@ -33,6 +36,7 @@ def generate_launch_description():
     config_paths = {
         'joystick': os.path.join(package_dir, 'config', 'joystick.yaml'),
         'twist_mux': os.path.join(package_dir, 'config', 'twist_mux.yaml'),
+        'livox_ekf': os.path.join(package_dir, 'config', 'livox_ekf.yaml'),
         'nav2': os.path.join(package_dir, 'config', 'nav2_params.yaml'),
         'rviz': os.path.join(package_dir, 'config', rviz_config),
         'urdf': os.path.join(package_dir, 'urdf', urdf_file),
@@ -48,6 +52,8 @@ def generate_launch_description():
     with_rviz = LaunchConfiguration('rviz', default='true')
     with_foxglove = LaunchConfiguration('foxglove', default='true')
     with_joystick = LaunchConfiguration('joystick', default='true')
+    with_go2_lidar = LaunchConfiguration('go2_lidar', default='false')
+    with_ekf = LaunchConfiguration('use_ekf', default='true')
     
     launch_args = [
         DeclareLaunchArgument(
@@ -58,6 +64,18 @@ def generate_launch_description():
         DeclareLaunchArgument('rviz', default_value='true', description='Launch RViz2'),
         DeclareLaunchArgument('foxglove', default_value='true', description='Launch Foxglove Bridge'),
         DeclareLaunchArgument('joystick', default_value='true', description='Launch joystick control'),
+        DeclareLaunchArgument('use_ekf', default_value='true', description='Fuse Go2 odometry and Livox IMU with robot_localization'),
+        DeclareLaunchArgument('driver_odom_tf', default_value='false', description='Let the Go2 driver publish odom -> base_link TF'),
+        DeclareLaunchArgument('go2_lidar', default_value='false', description='Run the built-in Go2 lidar processing pipeline'),
+        DeclareLaunchArgument('navigation_cloud_topic', default_value=livox_cloud_topic, description='Livox PointCloud2 topic used for navigation'),
+        DeclareLaunchArgument('livox_imu_topic', default_value=livox_imu_topic, description='Livox sensor_msgs/Imu topic used by the EKF'),
+        DeclareLaunchArgument('livox_frame', default_value=livox_frame, description='Livox lidar frame id'),
+        DeclareLaunchArgument('livox_x', default_value='0.25', description='Livox x offset from base_link in meters'),
+        DeclareLaunchArgument('livox_y', default_value='0.0', description='Livox y offset from base_link in meters'),
+        DeclareLaunchArgument('livox_z', default_value='0.16', description='Livox z offset from base_link in meters'),
+        DeclareLaunchArgument('livox_roll', default_value='0.0', description='Livox roll offset from base_link in radians'),
+        DeclareLaunchArgument('livox_pitch', default_value='0.0', description='Livox pitch offset from base_link in radians'),
+        DeclareLaunchArgument('livox_yaw', default_value='0.0', description='Livox yaw offset from base_link in radians'),
     ]
     
     # Load URDF
@@ -86,14 +104,48 @@ def generate_launch_description():
             parameters=[{
                 'robot_ip': robot_ip,
                 'token': robot_token,
-                'conn_type': conn_type
+                'conn_type': conn_type,
+                'publish_odom_tf': LaunchConfiguration('driver_odom_tf'),
             }],
         ),
-        # LiDAR processing node
+        # Livox lidar mounting transform. Replace these launch argument defaults
+        # with the measured position/orientation of the sensor on your robot.
+        Node(
+            package='tf2_ros',
+            executable='static_transform_publisher',
+            name='base_link_to_livox',
+            arguments=[
+                '--x', LaunchConfiguration('livox_x'),
+                '--y', LaunchConfiguration('livox_y'),
+                '--z', LaunchConfiguration('livox_z'),
+                '--roll', LaunchConfiguration('livox_roll'),
+                '--pitch', LaunchConfiguration('livox_pitch'),
+                '--yaw', LaunchConfiguration('livox_yaw'),
+                '--frame-id', 'base_link',
+                '--child-frame-id', LaunchConfiguration('livox_frame'),
+            ],
+            output='screen',
+        ),
+        # EKF odometry. The Go2 driver still publishes /odom, but the EKF owns
+        # odom -> base_link TF when use_ekf is true.
+        Node(
+            package='robot_localization',
+            executable='ekf_node',
+            name='ekf_filter_node',
+            condition=IfCondition(with_ekf),
+            output='screen',
+            parameters=[
+                config_paths['livox_ekf'],
+                {'imu0': LaunchConfiguration('livox_imu_topic')},
+                {'use_sim_time': use_sim_time},
+            ],
+        ),
+        # Built-in Go2 lidar processing node. Off by default for Livox navigation.
         Node(
             package='lidar_processor_cpp',
             executable='lidar_to_pointcloud_node',
             name='lidar_to_pointcloud',
+            condition=IfCondition(with_go2_lidar),
             remappings=[
                 ('robot0/point_cloud2', 'point_cloud2'),
             ] if conn_mode == 'single' else [],
@@ -108,6 +160,7 @@ def generate_launch_description():
             package='lidar_processor_cpp',
             executable='pointcloud_aggregator_node',
             name='pointcloud_aggregator',
+            condition=IfCondition(with_go2_lidar),
             parameters=[{
                 'max_range': 20.0,
                 'min_range': 0.1,
@@ -123,21 +176,21 @@ def generate_launch_description():
             executable='pointcloud_to_laserscan_node',
             name='go2_pointcloud_to_laserscan',
             remappings=[
-                ('cloud_in', '/pointcloud/filtered'),
+                ('cloud_in', LaunchConfiguration('navigation_cloud_topic')),
                 ('scan', '/scan'),
             ],
             parameters=[{
                 'target_frame': 'base_link',
-                'max_height': 0.5,
-                'min_height': 0.1,
-                # 'angle_min': -3.14159,
-                # 'angle_max': 3.14159,
-                # 'angle_increment': 0.0174533,
-                # 'scan_time': 0.033,
-                # 'range_min': 0.1,
-                # 'range_max': 20.0,
-                # 'use_inf': True,
-                # 'concurrency_level': 1,
+                'max_height': 2.0,
+                'min_height': -0.2,
+                'angle_min': -3.14159,
+                'angle_max': 3.14159,
+                'angle_increment': 0.00872665,
+                'scan_time': 0.1,
+                'range_min': 0.1,
+                'range_max': 20.0,
+                'use_inf': True,
+                'concurrency_level': 1,
             }],
             output='screen',
         ),
@@ -176,7 +229,6 @@ def generate_launch_description():
             package='twist_mux',
             executable='twist_mux',
             output='screen',
-            condition=IfCondition(with_joystick),
             parameters=[
                 {'use_sim_time': use_sim_time},
                 config_paths['twist_mux']
