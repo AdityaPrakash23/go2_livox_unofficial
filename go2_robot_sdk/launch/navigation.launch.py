@@ -62,7 +62,7 @@ def generate_launch_description():
             description='Full path to map yaml file for navigation'
         ),
         DeclareLaunchArgument('rviz', default_value='true', description='Launch RViz2'),
-        DeclareLaunchArgument('foxglove', default_value='false', description='Launch Foxglove Bridge'),
+        DeclareLaunchArgument('foxglove', default_value='true', description='Launch Foxglove Bridge'),
         DeclareLaunchArgument('joystick', default_value='true', description='Launch joystick control'),
         DeclareLaunchArgument('use_ekf', default_value='true', description='Fuse Go2 odometry and Livox IMU with robot_localization'),
         DeclareLaunchArgument('driver_odom_tf', default_value='false', description='Let the Go2 driver publish odom -> base_link TF'),
