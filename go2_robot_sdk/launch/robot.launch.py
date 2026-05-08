@@ -297,7 +297,7 @@ class Go2NodeFactory:
     def create_include_launches(self) -> List[IncludeLaunchDescription]:
         """Create included launch descriptions"""
         use_sim_time = LaunchConfiguration('use_sim_time', default='false')
-        with_foxglove = LaunchConfiguration('foxglove', default='true')
+        with_foxglove = LaunchConfiguration('foxglove', default='false')
         with_slam = LaunchConfiguration('slam', default='true')
         with_nav2 = LaunchConfiguration('nav2', default='true')
         
