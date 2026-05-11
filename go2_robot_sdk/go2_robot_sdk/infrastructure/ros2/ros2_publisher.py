@@ -110,19 +110,24 @@ class ROS2Publisher(IRobotDataPublisher):
             odom_msg.twist.twist.angular.y = 0.0
             odom_msg.twist.twist.angular.z = float(velocity.get('yaw', 0.0))
 
-        # Add covariance (required for AMCL and Nav2)
-        odom_msg.pose.covariance = [0.01, 0, 0, 0, 0, 0,
-        0, 0.01, 0, 0, 0, 0,
-        0, 0, 0.01, 0, 0, 0,
-        0, 0, 0, 0.03, 0, 0,
-        0, 0, 0, 0, 0.03, 0,
-        0, 0, 0, 0, 0, 0.05]
-        odom_msg.twist.covariance = [0.02, 0, 0, 0, 0, 0,
-        0, 0.02, 0, 0, 0, 0,
-        0, 0, 0.02, 0, 0, 0,
-        0, 0, 0, 0.05, 0, 0,
-        0, 0, 0, 0, 0.05, 0,
-        0, 0, 0, 0, 0, 0.1]
+        # Add covariance (required for AMCL and Nav2). ROS 2 validates every
+        # value as a float, so keep zeroes as 0.0 instead of ints.
+        odom_msg.pose.covariance = [
+            0.01, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.01, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.01, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.03, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.03, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.05,
+        ]
+        odom_msg.twist.covariance = [
+            0.02, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.02, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.02, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.05, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.05, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.1,
+        ]
 
         self.publishers['odometry'][robot_idx].publish(odom_msg)
 

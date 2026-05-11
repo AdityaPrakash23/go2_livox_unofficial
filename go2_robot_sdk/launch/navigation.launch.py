@@ -50,7 +50,7 @@ def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
     map_arg = LaunchConfiguration('map')
     with_rviz = LaunchConfiguration('rviz', default='true')
-    rviz_fixed_frame = LaunchConfiguration('rviz_fixed_frame', default='odom')
+    rviz_fixed_frame = LaunchConfiguration('rviz_fixed_frame', default='map')
     with_foxglove = LaunchConfiguration('foxglove', default='true')
     with_joystick = LaunchConfiguration('joystick', default='true')
     with_go2_lidar = LaunchConfiguration('go2_lidar', default='false')
@@ -63,7 +63,7 @@ def generate_launch_description():
             description='Full path to map yaml file for navigation'
         ),
         DeclareLaunchArgument('rviz', default_value='true', description='Launch RViz2'),
-        DeclareLaunchArgument('rviz_fixed_frame', default_value='odom', description='RViz fixed frame'),
+        DeclareLaunchArgument('rviz_fixed_frame', default_value='map', description='RViz fixed frame'),
         DeclareLaunchArgument('foxglove', default_value='true', description='Launch Foxglove Bridge'),
         DeclareLaunchArgument('joystick', default_value='true', description='Launch joystick control'),
         DeclareLaunchArgument('use_ekf', default_value='false', description='Fuse Go2 odometry and Livox IMU with robot_localization'),
