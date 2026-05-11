@@ -54,7 +54,7 @@ def generate_launch_description():
     with_foxglove = LaunchConfiguration('foxglove', default='true')
     with_joystick = LaunchConfiguration('joystick', default='true')
     with_go2_lidar = LaunchConfiguration('go2_lidar', default='false')
-    with_ekf = LaunchConfiguration('use_ekf', default='true')
+    with_ekf = LaunchConfiguration('use_ekf', default='false')
     
     launch_args = [
         DeclareLaunchArgument(
@@ -66,8 +66,8 @@ def generate_launch_description():
         DeclareLaunchArgument('rviz_fixed_frame', default_value='odom', description='RViz fixed frame'),
         DeclareLaunchArgument('foxglove', default_value='true', description='Launch Foxglove Bridge'),
         DeclareLaunchArgument('joystick', default_value='true', description='Launch joystick control'),
-        DeclareLaunchArgument('use_ekf', default_value='true', description='Fuse Go2 odometry and Livox IMU with robot_localization'),
-        DeclareLaunchArgument('driver_odom_tf', default_value='false', description='Let the Go2 driver publish odom -> base_link TF'),
+        DeclareLaunchArgument('use_ekf', default_value='false', description='Fuse Go2 odometry and Livox IMU with robot_localization'),
+        DeclareLaunchArgument('driver_odom_tf', default_value='true', description='Let the Go2 driver publish odom -> base_link TF'),
         DeclareLaunchArgument('go2_lidar', default_value='false', description='Run the built-in Go2 lidar processing pipeline'),
         DeclareLaunchArgument('navigation_cloud_topic', default_value=livox_cloud_topic, description='Livox PointCloud2 topic used for navigation'),
         DeclareLaunchArgument('livox_imu_topic', default_value=livox_imu_topic, description='Livox sensor_msgs/Imu topic used by the EKF'),
@@ -128,8 +128,8 @@ def generate_launch_description():
             ],
             output='screen',
         ),
-        # EKF odometry. The Go2 driver still publishes /odom, but the EKF owns
-        # odom -> base_link TF when use_ekf is true.
+        # Optional EKF odometry. Disabled by default because the Go2 driver
+        # publishes the stable odom -> base_link TF used by Nav2.
         Node(
             package='robot_localization',
             executable='ekf_node',
