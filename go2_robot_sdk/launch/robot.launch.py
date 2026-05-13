@@ -155,7 +155,16 @@ class Go2NodeFactory:
                 ],
                 parameters=[{
                     'target_frame': f'{namespace}/base_link',
-                    'max_height': 0.1
+                    'min_height': -0.1,
+                    'max_height': 1.2,
+                    'angle_min': -3.14159,
+                    'angle_max': 3.14159,
+                    'angle_increment': 0.00872665,
+                    'scan_time': 0.1,
+                    'range_min': 0.2,
+                    'range_max': 20.0,
+                    'use_inf': True,
+                    'concurrency_level': 2,
                 }],
                 output='screen',
             )
@@ -171,17 +180,16 @@ class Go2NodeFactory:
                 ],
                 parameters=[{
                     'target_frame': 'base_link',
-                    'max_height': 0.5,
-                    'min_height': 0.1,
-                    'range_min': 0.5,
+                    'min_height': -0.1,
+                    'max_height': 1.2,
                     'angle_min': -3.14159,
                     'angle_max': 3.14159,
-                    'angle_increment': 0.0174533,
-                    # 'scan_time': 0.033,
-                    # 'range_max': 20.0,
-                    # 'use_inf': True,
-                    # 'concurrency_level': 1,
-                    
+                    'angle_increment': 0.00872665,
+                    'scan_time': 0.1,
+                    'range_min': 0.2,
+                    'range_max': 20.0,
+                    'use_inf': True,
+                    'concurrency_level': 2,
                 }],
                 output='screen',
             )
@@ -219,11 +227,11 @@ class Go2NodeFactory:
                 name='pointcloud_aggregator',
                 parameters=[{
                     'max_range': 20.0,
-                    'min_range': 0.5,
-                    'height_filter_min': 0.1,
-                    'height_filter_max': 0.5,
-                    'downsample_rate': 5,
-                    'publish_rate': 10.0
+                    'min_range': 0.2,
+                    'height_filter_min': -0.1,
+                    'height_filter_max': 1.2,
+                    'downsample_rate': 2,
+                    'publish_rate': 15.0
                 }],
             ),
             # TTS Node (new separate package)
