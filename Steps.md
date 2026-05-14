@@ -18,7 +18,8 @@ ros2 launch livox_ros_driver2 msg_MID360_launch.py
 
 *Confirm that the livox lidar is connected*\
 *Then go back to 1st terminal and run*\
-`ros2 launch go2_robot_sdk robot.launch.py`
+`ros2 launch go2_robot_sdk robot.launch.py   mapping_cloud_topic:=/livox/lidar   livox_imu_topic:=/livox/imu   livox_frame:=livox_frame   use_ekf:=true   driver_odom_tf:=false`
 
 *The rviz window should show up with the robot and Lidar running and mapping happening*\
 *Then use the SLAM toolbox plugin inside Rviz to save the map*\
+
