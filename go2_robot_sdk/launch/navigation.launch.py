@@ -52,7 +52,7 @@ def generate_launch_description():
     with_rviz = LaunchConfiguration('rviz', default='true')
     rviz_fixed_frame = LaunchConfiguration('rviz_fixed_frame', default='map')
     with_foxglove = LaunchConfiguration('foxglove', default='true')
-    with_joystick = LaunchConfiguration('joystick', default='true')
+    with_joystick = LaunchConfiguration('joystick', default='false')
     with_go2_lidar = LaunchConfiguration('go2_lidar', default='false')
     with_ekf = LaunchConfiguration('use_ekf', default='false')
     
@@ -65,7 +65,7 @@ def generate_launch_description():
         DeclareLaunchArgument('rviz', default_value='true', description='Launch RViz2'),
         DeclareLaunchArgument('rviz_fixed_frame', default_value='map', description='RViz fixed frame'),
         DeclareLaunchArgument('foxglove', default_value='true', description='Launch Foxglove Bridge'),
-        DeclareLaunchArgument('joystick', default_value='true', description='Launch joystick control'),
+        DeclareLaunchArgument('joystick', default_value='false', description='Launch joystick control'),
         DeclareLaunchArgument('use_ekf', default_value='false', description='Fuse Go2 odometry and Livox IMU with robot_localization'),
         DeclareLaunchArgument('driver_odom_tf', default_value='true', description='Let the Go2 driver publish odom -> base_link TF'),
         DeclareLaunchArgument('go2_lidar', default_value='false', description='Run the built-in Go2 lidar processing pipeline'),
@@ -193,6 +193,15 @@ def generate_launch_description():
                 'range_max': 20.0,
                 'use_inf': True,
                 'concurrency_level': 2,
+                'qos_overrides': {
+                    '/scan': {
+                        'publisher': {
+                            'reliability': 'reliable',
+                            'history': 'keep_last',
+                            'depth': 10,
+                        },
+                    },
+                },
             }],
             output='screen',
         ),
