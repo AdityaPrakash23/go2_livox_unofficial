@@ -164,7 +164,7 @@ def generate_launch_description():
             name='pointcloud_aggregator',
             condition=IfCondition(with_go2_lidar),
             parameters=[{
-                'max_range': 20.0,
+                'max_range': 5.0,
                 'min_range': 0.2,
                 'height_filter_min': 0.05,
                 'height_filter_max': 0.8,
@@ -184,14 +184,14 @@ def generate_launch_description():
             parameters=[{
                 'target_frame': 'base_link',
                 'min_height': 0.05,
-                'max_height': 0.8,
+                'max_height': 0.45,
                 'angle_min': -3.14159,
                 'angle_max': 3.14159,
                 'angle_increment': 0.00872665,
                 'scan_time': 0.1,
                 'range_min': 0.2,
                 'range_max': 20.0,
-                'use_inf': True,
+                'use_inf': False,
                 'concurrency_level': 2,
                 'qos_overrides': {
                     '/scan': {
