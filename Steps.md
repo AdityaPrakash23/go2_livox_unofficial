@@ -7,7 +7,7 @@ export ROBOT_IP="192.168.123.161"
 ```
 
 **Run this command in a new terminal**\
-`ros2 run tf2_ros static_transform_publisher 0 0 0 3.14 0 0 base_link livox_frame`
+`ros2 run tf2_ros static_transform_publisher 0 0 0 0 0 0 base_link livox_frame`
 
 **Then run the following in another new terminal**
 ```
@@ -18,8 +18,10 @@ ros2 launch livox_ros_driver2 msg_MID360_launch.py
 
 *Confirm that the livox lidar is connected*\
 *Then go back to 1st terminal and run*\
-`ros2 launch go2_robot_sdk robot.launch.py   mapping_cloud_topic:=/livox/lidar   livox_imu_topic:=/livox/imu   livox_frame:=livox_frame   use_ekf:=true   driver_odom_tf:=false`
+`ros2 launch go2_robot_sdk robot.launch.py   mapping_cloud_topic:=/livox/lidar   livox_imu_topic:=/livox/imu   livox_frame:=livox_frame`
 
 *The rviz window should show up with the robot and Lidar running and mapping happening*\
 *Then use the SLAM toolbox plugin inside Rviz to save the map*\
 
+*For running Nav2, run the following command after running the livox launch file*\
+``
