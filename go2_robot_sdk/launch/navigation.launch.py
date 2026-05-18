@@ -209,19 +209,19 @@ def generate_launch_description():
             output='screen',
         ),
         # TTS Node
-        Node(
-            package='speech_processor',
-            executable='tts_node',
-            name='tts_node',
-            parameters=[{
-                'api_key': os.getenv('ELEVENLABS_API_KEY', ''),
-                'provider': 'elevenlabs',
-                'voice_name': 'XrExE9yKIg1WjnnlVkGX',
-                'local_playback': False,
-                'use_cache': True,
-                'audio_quality': 'standard'
-            }],
-        ),
+        # Node(
+        #     package='speech_processor',
+        #     executable='tts_node',
+        #     name='tts_node',
+        #     parameters=[{
+        #         'api_key': os.getenv('ELEVENLABS_API_KEY', ''),
+        #         'provider': 'elevenlabs',
+        #         'voice_name': 'XrExE9yKIg1WjnnlVkGX',
+        #         'local_playback': False,
+        #         'use_cache': True,
+        #         'audio_quality': 'standard'
+        #     }],
+        # ),
     ]
     
     # Teleop nodes
