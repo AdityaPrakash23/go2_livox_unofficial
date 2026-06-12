@@ -41,4 +41,4 @@ ros2 launch livox_ros_driver2 msg_MID360_launch.py
 `ros2 run teleop_twist_keyboard teleop_twist_keyboard`
 
 *For running Nav2, run the following command after running the livox launch file*\
-`ros2 launch go2_robot_sdk navigation.launch.py map:=/home/orin/test_sdk_ws/testLab.yaml`
+`ros2 launch go2_robot_sdk navigation.launch.py map:=/home/orin/test_sdk_ws/testLab.yaml driver_odom_tf:=false`
