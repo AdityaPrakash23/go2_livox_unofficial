@@ -10,7 +10,11 @@
   <depend>rclpy</depend>
   <depend>go2_interfaces</depend>
   <!-- unitree_go merged into go2_interfaces -->
+  <depend>geometry_msgs</depend>
+  <depend>livox_ros_driver2</depend>
+  <depend>nav_msgs</depend>
   <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
 
   <exec_depend>twist_mux</exec_depend>
   <exec_depend>joy</exec_depend>

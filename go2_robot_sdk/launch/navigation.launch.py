@@ -24,6 +24,7 @@ def generate_launch_description():
     livox_cloud_topic = os.getenv('LIVOX_CLOUD_TOPIC', '/livox/lidar')
     livox_imu_topic = os.getenv('LIVOX_IMU_TOPIC', '/livox/imu')
     livox_frame = os.getenv('LIVOX_FRAME', 'livox_frame')
+    converted_livox_topic = os.getenv('LIVOX_POINTCLOUD2_TOPIC', '/livox/points')
     
     # Determine connection mode
     conn_mode = "single" if len(robot_ip_list) == 1 and conn_type != "cyclonedds" else "multi"
@@ -56,6 +57,8 @@ def generate_launch_description():
     with_go2_lidar = LaunchConfiguration('go2_lidar', default='false')
     with_ekf = LaunchConfiguration('use_ekf', default='false')
     enable_video = LaunchConfiguration('enable_video', default='false')
+    use_livox_custom_to_pointcloud2 = LaunchConfiguration('use_livox_custom_to_pointcloud2', default='false')
+    use_fast_lio_odom = LaunchConfiguration('use_fast_lio_odom', default='false')
     
     launch_args = [
         DeclareLaunchArgument(
@@ -72,6 +75,12 @@ def generate_launch_description():
         DeclareLaunchArgument('driver_odom_tf', default_value='true', description='Let the Go2 driver publish odom -> base_link TF'),
         DeclareLaunchArgument('go2_lidar', default_value='false', description='Run the built-in Go2 lidar processing pipeline'),
         DeclareLaunchArgument('navigation_cloud_topic', default_value=livox_cloud_topic, description='Livox PointCloud2 topic used for navigation'),
+        DeclareLaunchArgument('use_livox_custom_to_pointcloud2', default_value='false', description='Convert Livox CustomMsg into PointCloud2 for Nav2/AMCL'),
+        DeclareLaunchArgument('livox_custom_topic', default_value='/livox/lidar', description='Livox CustomMsg topic used by FAST-LIO2'),
+        DeclareLaunchArgument('livox_pointcloud2_topic', default_value=converted_livox_topic, description='Converted Livox PointCloud2 topic for Nav2/AMCL'),
+        DeclareLaunchArgument('use_fast_lio_odom', default_value='false', description='Adapt FAST-LIO2 /Odometry into /odom and publish odom -> base_link TF'),
+        DeclareLaunchArgument('fast_lio_odom_topic', default_value='/Odometry', description='FAST-LIO2 nav_msgs/Odometry topic'),
+        DeclareLaunchArgument('adapted_odom_topic', default_value='/odom', description='Nav2 odometry topic published by the FAST-LIO adapter'),
         DeclareLaunchArgument('livox_imu_topic', default_value=livox_imu_topic, description='Livox sensor_msgs/Imu topic used by the EKF'),
         DeclareLaunchArgument('livox_frame', default_value=livox_frame, description='Livox lidar frame id'),
         DeclareLaunchArgument('livox_x', default_value='0.0', description='Livox x offset from base_link in meters'),
@@ -144,6 +153,36 @@ def generate_launch_description():
                 {'imu0': LaunchConfiguration('livox_imu_topic')},
                 {'use_sim_time': use_sim_time},
             ],
+        ),
+        # Optional bridge for the dual Livox setup:
+        # /livox/lidar CustomMsg for FAST-LIO2, /livox/points PointCloud2 for Nav2.
+        Node(
+            package='go2_robot_sdk',
+            executable='livox_custom_to_pointcloud2',
+            name='livox_custom_to_pointcloud2',
+            condition=IfCondition(use_livox_custom_to_pointcloud2),
+            output='screen',
+            parameters=[{
+                'input_topic': LaunchConfiguration('livox_custom_topic'),
+                'output_topic': LaunchConfiguration('livox_pointcloud2_topic'),
+                'frame_id': LaunchConfiguration('livox_frame'),
+            }],
+        ),
+        # Optional adapter for FAST-LIO2 odometry. When this is enabled, launch
+        # with driver_odom_tf:=false so only one node publishes odom -> base_link.
+        Node(
+            package='go2_robot_sdk',
+            executable='fast_lio_odom_adapter',
+            name='fast_lio_odom_adapter',
+            condition=IfCondition(use_fast_lio_odom),
+            output='screen',
+            parameters=[{
+                'input_topic': LaunchConfiguration('fast_lio_odom_topic'),
+                'output_topic': LaunchConfiguration('adapted_odom_topic'),
+                'odom_frame': 'odom',
+                'base_frame': 'base_link',
+                'publish_tf': True,
+            }],
         ),
         # Built-in Go2 lidar processing node. Off by default for Livox navigation.
         Node(

@@ -37,6 +37,8 @@ setup(
     entry_points={
         'console_scripts': [
             'go2_driver_node = go2_robot_sdk.main:main',
+            'fast_lio_odom_adapter = go2_robot_sdk.fast_lio_odom_adapter:main',
+            'livox_custom_to_pointcloud2 = go2_robot_sdk.livox_custom_to_pointcloud2:main',
         ],
     },
 )
