@@ -166,6 +166,7 @@ def generate_launch_description():
                 'input_topic': LaunchConfiguration('livox_custom_topic'),
                 'output_topic': LaunchConfiguration('livox_pointcloud2_topic'),
                 'frame_id': LaunchConfiguration('livox_frame'),
+                'reliability': 'reliable',
             }],
         ),
         # Optional adapter for FAST-LIO2 odometry. When this is enabled, launch
@@ -234,6 +235,7 @@ def generate_launch_description():
                 'range_min': 0.2,
                 'range_max': 20.0,
                 'use_inf': False,
+                'lazy': False,
                 'concurrency_level': 2,
                 'qos_overrides': {
                     '/scan': {

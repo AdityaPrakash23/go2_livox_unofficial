@@ -24,6 +24,7 @@ class LivoxCustomToPointCloud2(Node):
         self.declare_parameter('downsample_rate', 1)
         self.declare_parameter('min_range', 0.0)
         self.declare_parameter('max_range', 0.0)
+        self.declare_parameter('reliability', 'reliable')
 
         self.input_topic = self.get_parameter('input_topic').value
         self.output_topic = self.get_parameter('output_topic').value
@@ -31,11 +32,17 @@ class LivoxCustomToPointCloud2(Node):
         self.downsample_rate = max(1, int(self.get_parameter('downsample_rate').value))
         self.min_range = float(self.get_parameter('min_range').value)
         self.max_range = float(self.get_parameter('max_range').value)
+        reliability_name = str(self.get_parameter('reliability').value).lower()
+        reliability = (
+            ReliabilityPolicy.BEST_EFFORT
+            if reliability_name in ('best_effort', 'besteffort', 'best effort')
+            else ReliabilityPolicy.RELIABLE
+        )
 
         qos = QoSProfile(
             history=HistoryPolicy.KEEP_LAST,
-            depth=5,
-            reliability=ReliabilityPolicy.BEST_EFFORT,
+            depth=10,
+            reliability=reliability,
         )
 
         self.publisher = self.create_publisher(PointCloud2, self.output_topic, qos)
