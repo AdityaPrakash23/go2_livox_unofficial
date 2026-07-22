@@ -70,7 +70,8 @@ def generate_launch_description():
         DeclareLaunchArgument('use_livox_custom_to_pointcloud2', default_value='true', description='Convert Livox CustomMsg into PointCloud2 for SLAM Toolbox'),
         DeclareLaunchArgument('livox_custom_topic', default_value=livox_cloud_topic, description='Livox CustomMsg topic used by FAST-LIO2 and the PointCloud2 converter'),
         DeclareLaunchArgument('livox_pointcloud2_topic', default_value=converted_livox_topic, description='Converted Livox PointCloud2 topic for SLAM Toolbox'),
-        DeclareLaunchArgument('livox_converter_frame_id', default_value='', description='Optional frame_id override for converted Livox PointCloud2; empty preserves the CustomMsg frame'),
+        DeclareLaunchArgument('livox_converter_frame_id', default_value=livox_frame, description='frame_id assigned to converted Livox PointCloud2 for SLAM Toolbox'),
+        DeclareLaunchArgument('livox_converter_reliability', default_value='best_effort', description='QoS reliability for the Livox CustomMsg converter: best_effort or reliable'),
         DeclareLaunchArgument('use_fast_lio_odom', default_value='true', description='Adapt FAST-LIO2 /Odometry into /odom and publish odom -> base_link TF'),
         DeclareLaunchArgument('fast_lio_odom_topic', default_value='/Odometry', description='FAST-LIO2 nav_msgs/Odometry topic'),
         DeclareLaunchArgument('adapted_odom_topic', default_value='/odom', description='SLAM/Nav2 odometry topic published by the FAST-LIO adapter'),
@@ -145,7 +146,7 @@ def generate_launch_description():
                 'input_topic': LaunchConfiguration('livox_custom_topic'),
                 'output_topic': LaunchConfiguration('livox_pointcloud2_topic'),
                 'frame_id': LaunchConfiguration('livox_converter_frame_id'),
-                'reliability': 'reliable',
+                'reliability': LaunchConfiguration('livox_converter_reliability'),
             }],
         ),
         # FAST-LIO2 should publish /Odometry. This adapter exposes the odom
