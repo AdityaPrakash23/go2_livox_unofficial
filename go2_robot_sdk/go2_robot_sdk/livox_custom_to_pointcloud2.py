@@ -24,6 +24,7 @@ class LivoxCustomToPointCloud2(Node):
         self.declare_parameter('downsample_rate', 1)
         self.declare_parameter('min_range', 0.0)
         self.declare_parameter('max_range', 0.0)
+        self.declare_parameter('publish_period', 0.0)
         self.declare_parameter('reliability', 'reliable')
 
         self.input_topic = self.get_parameter('input_topic').value
@@ -32,6 +33,8 @@ class LivoxCustomToPointCloud2(Node):
         self.downsample_rate = max(1, int(self.get_parameter('downsample_rate').value))
         self.min_range = float(self.get_parameter('min_range').value)
         self.max_range = float(self.get_parameter('max_range').value)
+        self.publish_period = max(0.0, float(self.get_parameter('publish_period').value))
+        self.last_publish_time = None
         reliability_name = str(self.get_parameter('reliability').value).lower()
         reliability = (
             ReliabilityPolicy.BEST_EFFORT
@@ -66,6 +69,14 @@ class LivoxCustomToPointCloud2(Node):
         )
 
     def _on_cloud(self, msg: CustomMsg) -> None:
+        if self.publish_period > 0.0:
+            msg_time = rclpy.time.Time.from_msg(msg.header.stamp)
+            if self.last_publish_time is not None:
+                elapsed = (msg_time - self.last_publish_time).nanoseconds * 1e-9
+                if elapsed >= 0.0 and elapsed < self.publish_period:
+                    return
+            self.last_publish_time = msg_time
+
         data = bytearray()
         min_sq = self.min_range * self.min_range
         max_sq = self.max_range * self.max_range

@@ -116,6 +116,8 @@ ros2 launch go2_robot_sdk mapping.launch.py \
   livox_custom_topic:=/livox/lidar \
   livox_pointcloud2_topic:=/livox/points \
   mapping_cloud_topic:=/livox/points \
+  livox_converter_frame_id:=livox_frame \
+  livox_converter_reliability:=best_effort \
   foxglove:=false \
   enable_video:=false
 ```

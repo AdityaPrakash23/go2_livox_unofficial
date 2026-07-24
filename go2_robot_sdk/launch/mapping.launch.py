@@ -72,6 +72,7 @@ def generate_launch_description():
         DeclareLaunchArgument('livox_pointcloud2_topic', default_value=converted_livox_topic, description='Converted Livox PointCloud2 topic for SLAM Toolbox'),
         DeclareLaunchArgument('livox_converter_frame_id', default_value=livox_frame, description='frame_id assigned to converted Livox PointCloud2 for SLAM Toolbox'),
         DeclareLaunchArgument('livox_converter_reliability', default_value='best_effort', description='QoS reliability for the Livox CustomMsg converter: best_effort or reliable'),
+        DeclareLaunchArgument('livox_converter_publish_period', default_value='0.33', description='Minimum seconds between converted Livox PointCloud2 publishes; 0.2 is 5 Hz'),
         DeclareLaunchArgument('use_fast_lio_odom', default_value='true', description='Adapt FAST-LIO2 /Odometry into /odom and publish odom -> base_link TF'),
         DeclareLaunchArgument('fast_lio_odom_topic', default_value='/Odometry', description='FAST-LIO2 nav_msgs/Odometry topic'),
         DeclareLaunchArgument('adapted_odom_topic', default_value='/odom', description='SLAM/Nav2 odometry topic published by the FAST-LIO adapter'),
@@ -147,6 +148,7 @@ def generate_launch_description():
                 'output_topic': LaunchConfiguration('livox_pointcloud2_topic'),
                 'frame_id': LaunchConfiguration('livox_converter_frame_id'),
                 'reliability': LaunchConfiguration('livox_converter_reliability'),
+                'publish_period': LaunchConfiguration('livox_converter_publish_period'),
             }],
         ),
         # FAST-LIO2 should publish /Odometry. This adapter exposes the odom
@@ -216,6 +218,7 @@ def generate_launch_description():
                 'range_max': 5.0,
                 'use_inf': False,
                 'lazy': False,
+                'queue_size': 30,
                 'concurrency_level': 2,
                 'qos_overrides': {
                     '/scan': {
