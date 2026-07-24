@@ -17,6 +17,7 @@ class FastLioOdomAdapter(Node):
         self.declare_parameter('base_frame', 'base_link')
         self.declare_parameter('override_frame_ids', True)
         self.declare_parameter('publish_tf', True)
+        self.declare_parameter('restamp_with_current_time', False)
 
         self.input_topic = self.get_parameter('input_topic').value
         self.output_topic = self.get_parameter('output_topic').value
@@ -24,6 +25,7 @@ class FastLioOdomAdapter(Node):
         self.base_frame = self.get_parameter('base_frame').value
         self.override_frame_ids = self.get_parameter('override_frame_ids').value
         self.publish_tf = self.get_parameter('publish_tf').value
+        self.restamp_with_current_time = self.get_parameter('restamp_with_current_time').value
 
         self.odom_pub = self.create_publisher(Odometry, self.output_topic, 10)
         self.tf_broadcaster = TransformBroadcaster(self) if self.publish_tf else None
@@ -36,7 +38,9 @@ class FastLioOdomAdapter(Node):
 
         self.get_logger().info(
             f'Adapting {self.input_topic} -> {self.output_topic} '
-            f'({self.odom_frame} -> {self.base_frame}), publish_tf={self.publish_tf}'
+            f'({self.odom_frame} -> {self.base_frame}), '
+            f'publish_tf={self.publish_tf}, '
+            f'restamp_with_current_time={self.restamp_with_current_time}'
         )
 
     def _on_odom(self, msg: Odometry) -> None:
@@ -45,6 +49,9 @@ class FastLioOdomAdapter(Node):
         out.child_frame_id = msg.child_frame_id
         out.pose = msg.pose
         out.twist = msg.twist
+
+        if self.restamp_with_current_time:
+            out.header.stamp = self.get_clock().now().to_msg()
 
         if self.override_frame_ids:
             out.header.frame_id = self.odom_frame

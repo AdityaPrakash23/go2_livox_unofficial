@@ -25,6 +25,7 @@ class LivoxCustomToPointCloud2(Node):
         self.declare_parameter('min_range', 0.0)
         self.declare_parameter('max_range', 0.0)
         self.declare_parameter('publish_period', 0.0)
+        self.declare_parameter('restamp_with_current_time', False)
         self.declare_parameter('reliability', 'reliable')
 
         self.input_topic = self.get_parameter('input_topic').value
@@ -34,6 +35,7 @@ class LivoxCustomToPointCloud2(Node):
         self.min_range = float(self.get_parameter('min_range').value)
         self.max_range = float(self.get_parameter('max_range').value)
         self.publish_period = max(0.0, float(self.get_parameter('publish_period').value))
+        self.restamp_with_current_time = self.get_parameter('restamp_with_current_time').value
         self.last_publish_time = None
         reliability_name = str(self.get_parameter('reliability').value).lower()
         reliability = (
@@ -97,7 +99,11 @@ class LivoxCustomToPointCloud2(Node):
 
         cloud = PointCloud2()
         cloud.header = Header()
-        cloud.header.stamp = msg.header.stamp
+        cloud.header.stamp = (
+            self.get_clock().now().to_msg()
+            if self.restamp_with_current_time
+            else msg.header.stamp
+        )
         cloud.header.frame_id = self.frame_id or msg.header.frame_id
         cloud.height = 1
         cloud.width = len(data) // self._POINT_STEP

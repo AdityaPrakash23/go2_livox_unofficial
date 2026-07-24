@@ -51,7 +51,21 @@ ros2 launch livox_ros_driver2 msg_MID360_launch.py
 
 ros2 launch fast_lio mapping.launch.py
 
-ros2 launch go2_robot_sdk navigation.launch.py   map:=/home/orin/test_sdk_ws/testLab.yaml   use_livox_custom_to_pointcloud2:=true   livox_custom_topic:=/livox/lidar   livox_pointcloud2_topic:=/livox/points   navigation_cloud_topic:=/livox/points   use_fast_lio_odom:=true   fast_lio_odom_topic:=/Odometry   adapted_odom_topic:=/odom   driver_odom_tf:=false   foxglove:=false   enable_video:=false
+ros2 launch go2_robot_sdk navigation.launch.py \
+  map:=/home/orin/test_sdk_ws/testLab.yaml \
+  use_livox_custom_to_pointcloud2:=true \
+  livox_custom_topic:=/livox/lidar \
+  livox_pointcloud2_topic:=/livox/points \
+  navigation_cloud_topic:=/livox/points \
+  livox_converter_reliability:=best_effort \
+  livox_converter_publish_period:=0.2 \
+  use_fast_lio_odom:=true \
+  fast_lio_odom_topic:=/Odometry \
+  adapted_odom_topic:=/odom \
+  driver_odom_tf:=false \
+  restamp_sensor_data:=true \
+  foxglove:=false \
+  enable_video:=false
 
 
 ```

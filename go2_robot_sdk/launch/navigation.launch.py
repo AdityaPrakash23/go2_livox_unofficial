@@ -80,7 +80,7 @@ def generate_launch_description():
         DeclareLaunchArgument('livox_custom_topic', default_value='/livox/lidar', description='Livox CustomMsg topic used by FAST-LIO2'),
         DeclareLaunchArgument('livox_pointcloud2_topic', default_value=converted_livox_topic, description='Converted Livox PointCloud2 topic for Nav2/AMCL'),
         DeclareLaunchArgument('livox_converter_reliability', default_value='best_effort', description='QoS reliability for the Livox CustomMsg converter: best_effort or reliable'),
-        DeclareLaunchArgument('livox_converter_publish_period', default_value='0.2', description='Minimum seconds between converted Livox PointCloud2 publishes; 0.2 is 5 Hz'),
+        DeclareLaunchArgument('livox_converter_publish_period', default_value='0.33', description='Minimum seconds between converted Livox PointCloud2 publishes; 0.33 is about 3 Hz'),
         DeclareLaunchArgument('use_fast_lio_odom', default_value='false', description='Adapt FAST-LIO2 /Odometry into /odom and publish odom -> base_link TF'),
         DeclareLaunchArgument('fast_lio_odom_topic', default_value='/Odometry', description='FAST-LIO2 nav_msgs/Odometry topic'),
         DeclareLaunchArgument('adapted_odom_topic', default_value='/odom', description='Nav2 odometry topic published by the FAST-LIO adapter'),
