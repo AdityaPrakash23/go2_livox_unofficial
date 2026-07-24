@@ -73,11 +73,14 @@ def generate_launch_description():
         DeclareLaunchArgument('enable_video', default_value='false', description='Enable Go2 camera video publishing'),
         DeclareLaunchArgument('use_ekf', default_value='false', description='Fuse Go2 odometry and Livox IMU with robot_localization'),
         DeclareLaunchArgument('driver_odom_tf', default_value='true', description='Let the Go2 driver publish odom -> base_link TF'),
+        DeclareLaunchArgument('restamp_sensor_data', default_value='true', description='Restamp converted Livox clouds and FAST-LIO odom with current ROS time'),
         DeclareLaunchArgument('go2_lidar', default_value='false', description='Run the built-in Go2 lidar processing pipeline'),
         DeclareLaunchArgument('navigation_cloud_topic', default_value=livox_cloud_topic, description='Livox PointCloud2 topic used for navigation'),
         DeclareLaunchArgument('use_livox_custom_to_pointcloud2', default_value='false', description='Convert Livox CustomMsg into PointCloud2 for Nav2/AMCL'),
         DeclareLaunchArgument('livox_custom_topic', default_value='/livox/lidar', description='Livox CustomMsg topic used by FAST-LIO2'),
         DeclareLaunchArgument('livox_pointcloud2_topic', default_value=converted_livox_topic, description='Converted Livox PointCloud2 topic for Nav2/AMCL'),
+        DeclareLaunchArgument('livox_converter_reliability', default_value='best_effort', description='QoS reliability for the Livox CustomMsg converter: best_effort or reliable'),
+        DeclareLaunchArgument('livox_converter_publish_period', default_value='0.2', description='Minimum seconds between converted Livox PointCloud2 publishes; 0.2 is 5 Hz'),
         DeclareLaunchArgument('use_fast_lio_odom', default_value='false', description='Adapt FAST-LIO2 /Odometry into /odom and publish odom -> base_link TF'),
         DeclareLaunchArgument('fast_lio_odom_topic', default_value='/Odometry', description='FAST-LIO2 nav_msgs/Odometry topic'),
         DeclareLaunchArgument('adapted_odom_topic', default_value='/odom', description='Nav2 odometry topic published by the FAST-LIO adapter'),
@@ -166,7 +169,9 @@ def generate_launch_description():
                 'input_topic': LaunchConfiguration('livox_custom_topic'),
                 'output_topic': LaunchConfiguration('livox_pointcloud2_topic'),
                 'frame_id': LaunchConfiguration('livox_frame'),
-                'reliability': 'reliable',
+                'reliability': LaunchConfiguration('livox_converter_reliability'),
+                'publish_period': LaunchConfiguration('livox_converter_publish_period'),
+                'restamp_with_current_time': LaunchConfiguration('restamp_sensor_data'),
             }],
         ),
         # Optional adapter for FAST-LIO2 odometry. When this is enabled, launch
@@ -183,6 +188,7 @@ def generate_launch_description():
                 'odom_frame': 'odom',
                 'base_frame': 'base_link',
                 'publish_tf': True,
+                'restamp_with_current_time': LaunchConfiguration('restamp_sensor_data'),
             }],
         ),
         # Built-in Go2 lidar processing node. Off by default for Livox navigation.
@@ -236,6 +242,7 @@ def generate_launch_description():
                 'range_max': 20.0,
                 'use_inf': False,
                 'lazy': False,
+                'queue_size': 30,
                 'concurrency_level': 2,
                 'qos_overrides': {
                     '/scan': {
