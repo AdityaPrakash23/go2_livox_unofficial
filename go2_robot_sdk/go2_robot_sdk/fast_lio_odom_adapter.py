@@ -22,11 +22,11 @@ class FastLioOdomAdapter(Node):
         self.declare_parameter('publish_tf', True)
         self.declare_parameter('restamp_with_current_time', False)
         self.declare_parameter('force_2d', True)
-        self.declare_parameter('position_deadband', 0.003)
-        self.declare_parameter('yaw_deadband', 0.003)
-        self.declare_parameter('smoothing_alpha', 0.35)
-        self.declare_parameter('max_position_jump', 0.50)
-        self.declare_parameter('max_yaw_jump', 1.0)
+        self.declare_parameter('position_deadband', 0.0)
+        self.declare_parameter('yaw_deadband', 0.0)
+        self.declare_parameter('smoothing_alpha', 1.0)
+        self.declare_parameter('max_position_jump', 0.0)
+        self.declare_parameter('max_yaw_jump', 0.0)
 
         self.input_topic = self.get_parameter('input_topic').value
         self.output_topic = self.get_parameter('output_topic').value
