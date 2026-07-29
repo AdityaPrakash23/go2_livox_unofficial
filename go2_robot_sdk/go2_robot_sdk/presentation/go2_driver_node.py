@@ -90,6 +90,7 @@ class Go2DriverNode(Node):
                 ('enable_video', True),
                 ('decode_lidar', True),
                 ('publish_odom_tf', True),
+                ('publish_odom_topic', True),
                 ('publish_raw_voxel', False),
                 ('obstacle_avoidance', False),
             ]
@@ -116,6 +117,9 @@ class Go2DriverNode(Node):
         self.get_logger().info(f"Decode lidar: {config.decode_lidar}")
         self.get_logger().info(
             f"Publish odom TF: {self.get_parameter('publish_odom_tf').get_parameter_value().bool_value}"
+        )
+        self.get_logger().info(
+            f"Publish odom topic: {self.get_parameter('publish_odom_topic').get_parameter_value().bool_value}"
         )
         self.get_logger().info(f"Publish raw voxel: {config.publish_raw_voxel}")
         self.get_logger().info(f"Obstacle avoidance: {config.obstacle_avoidance}")

@@ -73,6 +73,7 @@ def generate_launch_description():
         DeclareLaunchArgument('enable_video', default_value='false', description='Enable Go2 camera video publishing'),
         DeclareLaunchArgument('use_ekf', default_value='false', description='Fuse Go2 odometry and Livox IMU with robot_localization'),
         DeclareLaunchArgument('driver_odom_tf', default_value='true', description='Let the Go2 driver publish odom -> base_link TF'),
+        DeclareLaunchArgument('driver_odom_topic', default_value='true', description='Let the Go2 driver publish nav_msgs/Odometry on /odom'),
         DeclareLaunchArgument('restamp_sensor_data', default_value='true', description='Restamp converted Livox clouds and FAST-LIO odom with current ROS time'),
         DeclareLaunchArgument('go2_lidar', default_value='false', description='Run the built-in Go2 lidar processing pipeline'),
         DeclareLaunchArgument('navigation_cloud_topic', default_value=livox_cloud_topic, description='Livox PointCloud2 topic used for navigation'),
@@ -130,6 +131,7 @@ def generate_launch_description():
                 'conn_type': conn_type,
                 'enable_video': enable_video,
                 'publish_odom_tf': LaunchConfiguration('driver_odom_tf'),
+                'publish_odom_topic': LaunchConfiguration('driver_odom_topic'),
             }],
         ),
         # Livox lidar mounting transform. Replace these launch argument defaults

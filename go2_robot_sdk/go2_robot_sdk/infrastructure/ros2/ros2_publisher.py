@@ -34,6 +34,7 @@ class ROS2Publisher(IRobotDataPublisher):
         self.bridge = CvBridge()
         self.camera_info = load_camera_info()
         self.publish_odom_tf = node.get_parameter('publish_odom_tf').get_parameter_value().bool_value
+        self.publish_odom_topic = node.get_parameter('publish_odom_topic').get_parameter_value().bool_value
 
     def publish_odometry(self, robot_data: RobotData) -> None:
         """Publish odometry data"""
@@ -46,8 +47,8 @@ class ROS2Publisher(IRobotDataPublisher):
             if self.publish_odom_tf:
                 self._publish_transform(robot_data, robot_idx)
             
-            # Publish odometry topic
-            self._publish_odometry_topic(robot_data, robot_idx)
+            if self.publish_odom_topic:
+                self._publish_odometry_topic(robot_data, robot_idx)
             
         except Exception as e:
             logger.error(f"Error publishing odometry: {e}")
