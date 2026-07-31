@@ -162,3 +162,30 @@ ros2 run tf2_ros tf2_echo map odom
 
 `odom -> base_link` should come from the FAST-LIO odom adapter. `map -> odom` should appear after SLAM Toolbox is running. Do not allow the Go2 driver and FAST-LIO adapter to both publish `odom -> base_link` at the same time.
 
+
+# New Steps for running setup:
+
+Open 3 terminals. In terminal 1 run 
+```
+ros2 launch livox_ros_driver2 msg_MID360_launch.py
+```
+In the 2nd terminal run
+```
+ros2 launch fast_lio mapping.launch.py
+```
+In the 3rd terminal run
+```
+ros2 launch go2_robot_sdk navigation.launch.py \
+  map:=/home/orin/test_sdk_ws/testLab.yaml \
+  use_livox_custom_to_pointcloud2:=true \
+  livox_custom_topic:=/livox/lidar \
+  livox_pointcloud2_topic:=/livox/points \
+  navigation_cloud_topic:=/livox/points \
+  use_fast_lio_odom:=true \
+  fast_lio_odom_topic:=/Odometry \
+  adapted_odom_topic:=/odom \
+  driver_odom_tf:=false \
+  driver_odom_topic:=false \
+  foxglove:=false \
+  enable_video:=false
+```
